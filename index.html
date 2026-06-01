@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farid Shahid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --border: rgba(255,255,255,0.07);
+      --text: #e8e8f0;
+      --muted: rgba(232,232,240,0.45);
+      --accent: #e040fb;
+      --accent2: #ce93d8;
+      --node: rgba(224,64,251,0.85);
+      --node-dim: rgba(224,64,251,0.15);
+      --line: rgba(224,64,251,0.12);
+      --glow: rgba(224,64,251,0.18);
+      --transition: 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --text: #1a1a2e;
+      --muted: rgba(26,26,46,0.5);
+      --accent: #c2185b;
+      --accent2: #ad1457;
+      --node: rgba(194,24,91,0.9);
+      --node-dim: rgba(194,24,91,0.12);
+      --line: rgba(194,24,91,0.1);
+      --glow: rgba(194,24,91,0.12);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+
+    /* ── Canvas ── */
+    #network-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Theme toggle ── */
+    #theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.75rem;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.45rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      transition: background var(--transition), border var(--transition), color 0.2s;
+      backdrop-filter: blur(12px);
+    }
+    #theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+    #theme-toggle .icon { font-size: 0.9rem; transition: transform 0.4s; }
+    #theme-toggle:hover .icon { transform: rotate(20deg); }
+
+    /* ── Main layout ── */
+    main {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 8vw;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Intro block ── */
+    .intro {
+      opacity: 0;
+      transform: translateY(28px);
+      animation: fadeUp 1s cubic-bezier(0.4,0,0.2,1) 0.3s forwards;
+    }
+
+    .eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.6s forwards;
+    }
+
+    h1 {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 1.6rem;
+      transition: color var(--transition);
+    }
+
+    h1 .last {
+      color: var(--accent);
+      display: block;
+    }
+
+    .tagline {
+      font-size: clamp(0.85rem, 1.5vw, 1rem);
+      color: var(--muted);
+      max-width: 480px;
+      line-height: 1.75;
+      margin-bottom: 2.8rem;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.9s forwards;
+    }
+
+    /* ── Links ── */
+    .links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 1.1s forwards;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: 1px solid var(--accent);
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--accent);
+      box-shadow: 0 0 24px var(--glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: var(--node-dim);
+    }
+
+    /* ── Scroll hint ── */
+    .scroll-hint {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0;
+      animation: fadeIn 1s ease 2s forwards;
+      z-index: 10;
+    }
+    .scroll-hint span {
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scroll-dot {
+      width: 1px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      animation: pulse-line 2s ease-in-out infinite;
+    }
+
+    /* ── Floating tag ── */
+    .tag {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeIn 1s ease 2.2s forwards;
+      z-index: 10;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes pulse-line {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50% { opacity: 1; transform: scaleY(1.1); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      main { padding: 0 6vw; }
+      .links { flex-direction: column; }
+      .btn { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="network-canvas"></canvas>
+
+<button id="theme-toggle" aria-label="Toggle theme">
+  <span class="icon">◐</span>
+  <span id="theme-label">light mode</span>
+</button>
+
+<main>
+  <div class="intro">
+    <h1>
+      Farid
+      <span class="last">Shahid</span>
+    </h1>
+    <p class="tagline">
+      MD-PhD student at University of Maryland School of Medicine.
+    </p>
+    <div class="links">
+      <a href="https://scholar.google.com/citations?hl=en&user=JaidTLwAAAAJ" target="_blank" rel="noopener" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 24a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0-24L0 9.5l4.838 3.94A8 8 0 0 1 12 10a8 8 0 0 1 7.162 3.44L24 9.5z"/></svg>
+        Google Scholar
+      </a>
+      <button onclick="copyEmail(this)" class="btn btn-ghost">
+        <svg id="contact-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        <span id="contact-label">Contact</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+
+
+<div class="tag">faridshahid.github.io</div>
+
+<script>
+  /* ── Theme toggle ── */
+  const toggle = document.getElementById('theme-toggle');
+  const label  = document.getElementById('theme-label');
+  const html   = document.documentElement;
+  let dark = true;
+
+  toggle.addEventListener('click', () => {
+    dark = !dark;
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    label.textContent = dark ? 'light mode' : 'dark mode';
+    updateCanvasColors();
+  });
+
+  /* ── Network canvas ── */
+  const canvas = document.getElementById('network-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  let W, H, nodes, mouse = { x: -9999, y: -9999 };
+
+  function getColors() {
+    const d = html.getAttribute('data-theme') === 'dark';
+    return {
+      node:   d ? 'rgba(224,64,251,0.85)'  : 'rgba(194,24,91,0.85)',
+      dim:    d ? 'rgba(224,64,251,0.15)'  : 'rgba(194,24,91,0.12)',
+      line:   d ? 'rgba(224,64,251,'       : 'rgba(194,24,91,',
+      glow:   d ? 'rgba(224,64,251,0.35)'  : 'rgba(194,24,91,0.3)',
+    };
+  }
+
+  let COLORS = getColors();
+  function updateCanvasColors() { COLORS = getColors(); }
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    initNodes();
+  }
+
+  function initNodes() {
+    const count = Math.floor((W * H) / 14000);
+    nodes = Array.from({ length: count }, () => ({
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r:  Math.random() * 1.8 + 0.8,
+    }));
+  }
+
+  const MAX_DIST  = 160;
+  const MOUSE_RAD = 220;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // update positions
+    for (const n of nodes) {
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    }
+
+    // draw lines
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > MAX_DIST) continue;
+
+        // check mouse proximity
+        const mdA = Math.hypot(mouse.x - a.x, mouse.y - a.y);
+        const mdB = Math.hypot(mouse.x - b.x, mouse.y - b.y);
+        const near = mdA < MOUSE_RAD || mdB < MOUSE_RAD;
+
+        const alpha = (1 - dist / MAX_DIST) * (near ? 0.55 : 0.18);
+        ctx.beginPath();
+        ctx.strokeStyle = COLORS.line + alpha + ')';
+        ctx.lineWidth   = near ? 0.8 : 0.5;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    // draw nodes
+    for (const n of nodes) {
+      const md = Math.hypot(mouse.x - n.x, mouse.y - n.y);
+      const near = md < MOUSE_RAD;
+      const pulse = near ? 1 + (1 - md / MOUSE_RAD) * 1.8 : 1;
+
+      if (near) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r * pulse * 4, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS.glow.replace('0.35', String(0.08 * pulse));
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = near ? COLORS.node : COLORS.dim;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+  // touch support
+  window.addEventListener('touchmove', e => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+  }, { passive: true });
+
+  /* ── Copy email ── */
+  function copyEmail(btn) {
+    navigator.clipboard.writeText('faridshahid123@gmail.com').then(() => {
+      const label = document.getElementById('contact-label');
+      const icon  = document.getElementById('contact-icon');
+      label.textContent = 'Copied!';
+      icon.innerHTML = '<polyline points="20 6 9 17 4 12" stroke-width="2.5"/>';
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.color = 'var(--accent)';
+      setTimeout(() => {
+        label.textContent = 'Contact';
+        icon.innerHTML = '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/>';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 2000);
+    });
+  }
+
+  resize();
+  draw();
+</script>
+</body>
+</html>
